@@ -186,12 +186,14 @@ const addAll = (
   registeredFileExplorers: WeakSet<ExplorerView>,
   callback?: () => void,
 ): void => {
+  // Handle file-explorer
   const fileExplorers = plugin.app.workspace.getLeavesOfType('file-explorer');
-
   for (const fileExplorer of fileExplorers) {
     if (registeredFileExplorers.has(fileExplorer.view)) {
       continue;
     }
+
+    console.log('🚀 ~ addAll ~ fileExplorer:', fileExplorer);
 
     registeredFileExplorers.add(fileExplorer.view);
 
@@ -210,6 +212,7 @@ const addAll = (
         }
       }
 
+      // Process file explorer items
       for (const [dataPath, value] of data) {
         const fileItem = fileExplorer.view.fileItems[dataPath];
         if (fileItem) {
@@ -246,15 +249,55 @@ const addAll = (
         }
       }
 
-      // Callback function to register other events to this file explorer.
       callback?.();
     };
 
     if (requireApiVersion('1.7.2')) {
-      // TODO: Remove loading deferred view to improve performance.
       fileExplorer.loadIfDeferred().then(setIcons);
     } else {
       setIcons();
+    }
+  }
+
+  // Handle file-tree-view
+  const fileTreeExplorers =
+    plugin.app.workspace.getLeavesOfType('file-tree-view');
+  for (const fileTreeExplorer of fileTreeExplorers) {
+    const setFileTreeIcons = () => {
+      const fileTreeView = fileTreeExplorer.view;
+      const fileTreeContent = fileTreeView.contentEl;
+      const fileTreeItems = fileTreeContent.querySelectorAll('.oz-nav-file');
+
+      fileTreeItems.forEach((fileTreeItem) => {
+        const fileTreeItemEl = fileTreeItem as HTMLElement;
+        const fileTreeItemTitleEl =
+          fileTreeItemEl.querySelector('.oz-nav-file-title');
+        const filePath = fileTreeItemTitleEl?.dataset.path;
+
+        if (filePath) {
+          const iconName = getByPath(plugin, filePath);
+          if (iconName) {
+            const iconNode = fileTreeItemTitleEl.createDiv();
+            iconNode.setAttribute(config.ICON_ATTRIBUTE_NAME, iconName);
+            iconNode.classList.add('iconize-icon');
+            dom.setIconForNode(plugin, iconName, iconNode);
+            fileTreeItemTitleEl.insertBefore(
+              iconNode,
+              fileTreeItemTitleEl.firstChild,
+            );
+
+            IconCache.getInstance().set(filePath, {
+              iconNameWithPrefix: iconName,
+            });
+          }
+        }
+      });
+    };
+
+    if (requireApiVersion('1.7.2')) {
+      fileTreeExplorer.loadIfDeferred().then(setFileTreeIcons);
+    } else {
+      setFileTreeIcons();
     }
   }
 

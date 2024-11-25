@@ -118,40 +118,50 @@ const createIconNode = (
   iconName: string,
   options?: CreateOptions,
 ): void => {
-  // Get the container from the provided options or try to find the node that has the
-  // path from the document itself.
-  const node =
-    options?.container ?? document.querySelector(`[data-path="${path}"]`);
-  if (!node) {
-    logger.warn(`Element with data path not found (path: ${path})`);
+  // Get all nodes that match the path
+  const nodes = options?.container
+    ? [options.container]
+    : Array.from(document.querySelectorAll(`[data-path="${path}"]`));
+
+  if (nodes.length === 0) {
+    logger.warn(`Elements with data path not found (path: ${path})`);
     return;
   }
 
-  // Get the folder or file title node.
-  let titleNode = node.querySelector('.nav-folder-title-content');
-  if (!titleNode) {
-    titleNode = node.querySelector('.nav-file-title-content');
+  // console.log('🚀 ~ nodes:', nodes);
 
+  // Process each matching node
+  nodes.forEach((node) => {
+    // Get the folder or file title node
+    let titleNode = node.querySelector(
+      '.nav-folder-title-content, .oz-folder-element',
+    );
     if (!titleNode) {
-      logger.warn(`Element with title node not found (path: ${path})`);
-      return;
+      titleNode = node.querySelector(
+        '.nav-file-title-content, .oz-nav-file-title-content',
+      );
+
+      if (!titleNode) {
+        logger.warn(`Element with title node not found (path: ${path})`);
+        return;
+      }
     }
-  }
 
-  let iconNode: HTMLDivElement = node.querySelector('.iconize-icon');
-  // If the icon is already set in the path, we do not need to create a new div element.
-  if (iconNode) {
-    setIconForNode(plugin, iconName, iconNode, { color: options?.color });
-  } else {
-    // Creates a new icon node and inserts it to the DOM.
-    iconNode = document.createElement('div');
-    iconNode.setAttribute(config.ICON_ATTRIBUTE_NAME, iconName);
-    iconNode.classList.add('iconize-icon');
+    let iconNode: HTMLDivElement = node.querySelector('.iconize-icon');
+    // If the icon is already set in the path, we do not need to create a new div element.
+    if (iconNode) {
+      setIconForNode(plugin, iconName, iconNode, { color: options?.color });
+    } else {
+      // Creates a new icon node and inserts it to the DOM.
+      iconNode = document.createElement('div');
+      iconNode.setAttribute(config.ICON_ATTRIBUTE_NAME, iconName);
+      iconNode.classList.add('iconize-icon');
 
-    setIconForNode(plugin, iconName, iconNode, { color: options?.color });
+      setIconForNode(plugin, iconName, iconNode, { color: options?.color });
 
-    node.insertBefore(iconNode, titleNode);
-  }
+      node.insertBefore(iconNode, titleNode);
+    }
+  });
 };
 
 /**

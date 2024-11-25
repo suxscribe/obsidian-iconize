@@ -11,6 +11,10 @@ importers:
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+    optionalDependencies:
+      '@rollup/rollup-linux-x64-gnu':
+        specifier: ^4.6.1
+        version: 4.24.0
     devDependencies:
       '@codemirror/language':
         specifier: https://github.com/lishid/cm-language

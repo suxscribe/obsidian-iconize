@@ -111,7 +111,7 @@ export default class IconizePlugin extends Plugin {
     if (!this.doesUseCustomLucideIconPack()) {
       addLucideIconsPack(this);
     }
-    await loadUsedIcons(this, usedIconNames);
+    await loadUsedIcons(this, usedIconNames); // insert icons into .iconize-icon elements
 
     this.app.workspace.onLayoutReady(() => this.handleChangeLayout());
 
@@ -409,6 +409,7 @@ export default class IconizePlugin extends Plugin {
         for (const openedFile of getAllOpenedFiles(this)) {
           const iconName = icon.getByPath(this, openedFile.path);
           const activeView = openedFile.leaf.view as InlineTitleView;
+          // console.log('🚀 ~ handleChangeLayout ~ iconName:', iconName);
           if (activeView instanceof MarkdownView && iconName) {
             let possibleIcon: string = iconName;
             if (!emoji.isEmoji(iconName)) {
@@ -737,6 +738,7 @@ export default class IconizePlugin extends Plugin {
           titleIcon.add(this, activeView.inlineTitleEl, possibleIcon, {
             fontSize: calculateInlineTitleSize(),
           });
+          // console.log('🚀 ~ addIconInTitle ~ iconName:', possibleIcon);
         }
       }
     }
@@ -835,6 +837,7 @@ export default class IconizePlugin extends Plugin {
     const iconName = getNormalizedName(
       typeof icon === 'object' ? icon.displayName : icon,
     );
+    // console.log('🚀 ~ addFolderIcon ~ iconName:', iconName);
 
     this.data[path] = iconName;
 
@@ -873,6 +876,7 @@ export default class IconizePlugin extends Plugin {
       });
     }
     this.data = Object.assign({ settings: { ...DEFAULT_SETTINGS } }, {}, data);
+    // console.log('🚀 ~ loadIconFolderData ~ this.data:', this.data);
   }
 
   async saveIconFolderData(): Promise<void> {
