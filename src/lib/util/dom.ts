@@ -130,9 +130,11 @@ const createIconNode = (
 
   // console.log('🚀 ~ nodes:', nodes);
 
+  // start zrx 2024-11-25
   // Process each matching node
   nodes.forEach((node) => {
     // Get the folder or file title node
+    console.log('🚀 ~ createIconNode ~ node:', node.innerHTML);
     let titleNode = node.querySelector(
       '.nav-folder-title-content, .oz-folder-element',
     );
@@ -162,6 +164,7 @@ const createIconNode = (
       node.insertBefore(iconNode, titleNode);
     }
   });
+  // end zrx 2024-11-25
 };
 
 /**

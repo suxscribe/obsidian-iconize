@@ -186,6 +186,8 @@ const addAll = (
   registeredFileExplorers: WeakSet<ExplorerView>,
   callback?: () => void,
 ): void => {
+  console.log('🚀 ~ addAll ~ addAll:');
+
   // Handle file-explorer
   const fileExplorers = plugin.app.workspace.getLeavesOfType('file-explorer');
   for (const fileExplorer of fileExplorers) {
@@ -219,12 +221,18 @@ const addAll = (
           const titleEl = getFileItemTitleEl(fileItem);
           const titleInnerEl = getFileItemInnerTitleEl(fileItem);
 
+          // console.log('🚀 ~ setIcons:', dataPath, titleEl.children);
+
           // Need to check this because refreshing the plugin will duplicate all the icons.
-          if (titleEl.children.length === 2 || titleEl.children.length === 1) {
+          // if (titleEl.children.length === 2 || titleEl.children.length === 1) {
+          if (titleEl.children.length) {
             const iconName = typeof value === 'string' ? value : value.iconName;
             const iconColor =
               typeof value === 'string' ? undefined : value.iconColor;
             if (iconName) {
+              console.log(titleEl);
+              console.log('🚀 ~ setIcons:', dataPath, iconName);
+
               // Removes a possible existing icon.
               const existingIcon = titleEl.querySelector('.iconize-icon');
               if (existingIcon) {
@@ -259,32 +267,51 @@ const addAll = (
     }
   }
 
+  // start zrx 2024-11-25
   // Handle file-tree-view
   const fileTreeExplorers =
     plugin.app.workspace.getLeavesOfType('file-tree-view');
   for (const fileTreeExplorer of fileTreeExplorers) {
     const setFileTreeIcons = () => {
+      console.log('🚀 ~ setFileTreeIcons ~ setFileTreeIcons:');
       const fileTreeView = fileTreeExplorer.view;
       const fileTreeContent = fileTreeView.contentEl;
-      const fileTreeItems = fileTreeContent.querySelectorAll('.oz-nav-file');
+      const fileTreeItems = fileTreeContent.querySelectorAll(
+        '.oz-nav-file, .oz-folder-element',
+      );
+
+      console.log('🚀 ~ setFileTreeIcons ~ fileTreeItems:', fileTreeItems);
 
       fileTreeItems.forEach((fileTreeItem) => {
         const fileTreeItemEl = fileTreeItem as HTMLElement;
-        const fileTreeItemTitleEl =
-          fileTreeItemEl.querySelector('.oz-nav-file-title');
-        const filePath = fileTreeItemTitleEl?.dataset.path;
+        const fileTreeItemTitleEl = fileTreeItemEl.querySelector(
+          '.oz-nav-file-title, .oz-folder-line',
+        );
+        const filePath =
+          fileTreeItemTitleEl?.dataset.path || fileTreeItemEl.dataset.path;
 
         if (filePath) {
           const iconName = getByPath(plugin, filePath);
           if (iconName) {
-            const iconNode = fileTreeItemTitleEl.createDiv();
-            iconNode.setAttribute(config.ICON_ATTRIBUTE_NAME, iconName);
-            iconNode.classList.add('iconize-icon');
-            dom.setIconForNode(plugin, iconName, iconNode);
-            fileTreeItemTitleEl.insertBefore(
-              iconNode,
-              fileTreeItemTitleEl.firstChild,
-            );
+            // Check for existing icon
+            const existingIcon =
+              fileTreeItemTitleEl.querySelector('.iconize-icon');
+
+            if (existingIcon) {
+              // Update existing icon
+              existingIcon.setAttribute(config.ICON_ATTRIBUTE_NAME, iconName);
+              dom.setIconForNode(plugin, iconName, existingIcon as HTMLElement);
+            } else {
+              // Create new icon if none exists
+              const iconNode = fileTreeItemTitleEl.createDiv();
+              iconNode.setAttribute(config.ICON_ATTRIBUTE_NAME, iconName);
+              iconNode.classList.add('iconize-icon');
+              dom.setIconForNode(plugin, iconName, iconNode);
+              fileTreeItemTitleEl.insertBefore(
+                iconNode,
+                fileTreeItemTitleEl.firstChild,
+              );
+            }
 
             IconCache.getInstance().set(filePath, {
               iconNameWithPrefix: iconName,
@@ -300,6 +327,7 @@ const addAll = (
       setFileTreeIcons();
     }
   }
+  // end zrx 2024-11-25
 
   // Handles the custom rules.
   for (const rule of customRule.getSortedRules(plugin)) {
